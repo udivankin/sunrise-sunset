@@ -1,5 +1,5 @@
 {
-  "name": "sunrise-sunset",
+  "name": "sunrise-sunset-js",
   "version": "1.0.0",
   "description": "Sunrise and sunset time calculation for given coordinates",
   "main": "dist/index.js",

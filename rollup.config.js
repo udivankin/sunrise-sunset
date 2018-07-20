@@ -4,7 +4,7 @@ import {
 } from 'rollup-plugin-uglify';
 
 export default {
-  moduleName: 'sunrise-sunset',
+  moduleName: 'sunrise-sunset-js',
   entry: 'src/index.js',
   dest: 'dist/index.js',
   format: 'umd',

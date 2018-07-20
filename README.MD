@@ -1,4 +1,4 @@
-#Sunrise-Sunset
+#Sunrise-Sunset-Js
 
 Calculate sunrise and sunset times in Javascript.
 Based loosely and indirectly on Kevin Boone's SunTimes Java implementation of the US Naval Observatory's algorithm.
@@ -13,7 +13,7 @@ npm install --save sunrise-sunset
 ### Usage
 
 ```javascript
-import { getSunrise, getSunset } from 'sunrise-sunset';
+import { getSunrise, getSunset } from 'sunrise-sunset-js';
 
 // Sunset tonight at the Triggertrap office for today
 const sunset = getSunset(51.4541, -2.5920);
