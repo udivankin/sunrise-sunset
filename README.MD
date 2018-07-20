@@ -1,4 +1,4 @@
-#Sunrise-Sunset-Js
+# Sunrise-Sunset-Js
 
 Calculate sunrise and sunset times in Javascript.
 Based loosely and indirectly on Kevin Boone's SunTimes Java implementation of the US Naval Observatory's algorithm.
@@ -7,7 +7,7 @@ Based loosely and indirectly on Kevin Boone's SunTimes Java implementation of th
 Via npm:
 
 ```bash
-npm install --save sunrise-sunset
+npm install --save sunrise-sunset-js
 ```
 
 ### Usage
@@ -27,6 +27,7 @@ navigator.geolocation.getCurrentPosition(function(position) {
 });
 ```
 
+```
 By Matt Kane (@ascorbic). Copyright © 2012 Triggertrap Ltd. All Rights Reserved.
 
 This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
@@ -38,3 +39,4 @@ details.
 You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
 the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA,
 or connect to: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+```
