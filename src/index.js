@@ -1,6 +1,4 @@
 /**
- * @license
- * 
  * Sunrise/sunset script. By Matt Kane. Adopted for NPM use by Alexey Udivankin.
  * 
  * Based loosely and indirectly on Kevin Boone's SunTimes Java implementation 
@@ -31,7 +29,7 @@ const DEFAULT_ZENITH = 90.8333;
 const DEGREES_PER_HOUR = 360 / 24;
 
 /**
- * Degrees per hour
+ * Msec in hour
  */
 const MSEC_IN_HOUR = 60 * 60 * 1000;
 
@@ -161,12 +159,11 @@ function calculate(latitude, longitude, isSunrise, zenith, date) {
  * 
  * @param {Number} latitude
  * @param {Number} latitude
- * @param {Number} [zenith]
  * @param {Date} [date]
  * @returns {Date}
  */
-function getSunrise(latitude, longitude, zenith = DEFAULT_ZENITH, date = new Date()) {
-  return calculate(latitude, longitude, true, zenith, date);
+function getSunrise(latitude, longitude, date = new Date()) {
+  return calculate(latitude, longitude, true, DEFAULT_ZENITH, date);
 };
 
 /**
@@ -174,12 +171,11 @@ function getSunrise(latitude, longitude, zenith = DEFAULT_ZENITH, date = new Dat
  * 
  * @param {Number} latitude
  * @param {Number} latitude
- * @param {Number} [zenith]
  * @param {Date} [date]
  * @returns {Date}
  */
-function getSunset(latitude, longitude, zenith = DEFAULT_ZENITH, date = new Date()) {
-  return calculate(latitude, longitude, false, zenith, date);
+function getSunset(latitude, longitude, date = new Date()) {
+  return calculate(latitude, longitude, false, DEFAULT_ZENITH, date);
 };
 
 module.exports = {
