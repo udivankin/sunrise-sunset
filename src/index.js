@@ -40,7 +40,7 @@ const MSEC_IN_HOUR = 60 * 60 * 1000;
  * @returns {Number}
  */
 function getDayOfYear(date) {
-  return Math.ceil((date - new Date(date.getFullYear(), 0, 1)) / 8.64e7);
+  return Math.ceil((date.getTime() - new Date(date.getFullYear(), 0, 1).getTime()) / 8.64e7);
 }
 
 /**
@@ -162,7 +162,7 @@ function calculate(latitude, longitude, isSunrise, zenith, date) {
  * @param {Date} [date]
  * @returns {Date}
  */
-function getSunrise(latitude, longitude, date = new Date()) {
+export function getSunrise(latitude, longitude, date = new Date()) {
   return calculate(latitude, longitude, true, DEFAULT_ZENITH, date);
 };
 
@@ -174,11 +174,6 @@ function getSunrise(latitude, longitude, date = new Date()) {
  * @param {Date} [date]
  * @returns {Date}
  */
-function getSunset(latitude, longitude, date = new Date()) {
+export function getSunset(latitude, longitude, date = new Date()) {
   return calculate(latitude, longitude, false, DEFAULT_ZENITH, date);
-};
-
-module.exports = {
-  getSunrise,
-  getSunset,
 };

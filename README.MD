@@ -2,6 +2,7 @@
 
 Calculate sunrise and sunset times in Javascript.
 Based loosely and indirectly on Kevin Boone's SunTimes Java implementation of the US Naval Observatory's algorithm.
+Works on both browser (IE11+) and Node.js, ~1kb minified.
 
 ### Install
 Via npm:
@@ -10,10 +11,17 @@ Via npm:
 npm install --save sunrise-sunset-js
 ```
 
+Via script tag:
+```html
+<script src="sunrise-sunset.js">
+```
+
 ### Usage
 
 ```javascript
 import { getSunrise, getSunset } from 'sunrise-sunset-js';
+// Or if you use CommonJS imports:
+// const { getSunrise, getSunset } = require('sunrise-sunset-js')
 
 // Sunset tonight at the Triggertrap office for today
 const sunset = getSunset(51.4541, -2.5920);
@@ -23,11 +31,18 @@ const sunrise = getSunrise(51.1788, -1.8262, new Date("2000-06-21"));
 
 // Combine it with geolocation. Sunset tonight at your location.
 navigator.geolocation.getCurrentPosition(function(position) {
-   	console.log(getSunset(position.coords.latitude, position.coords.longitude));
+		 console.log(getSunset(position.coords.latitude, position.coords.longitude));
 });
 ```
 
+For those who still don't use js bundlers, there's global SunriseSunsetJS object,
+which exposes the same getSunset and getSunrise methods (must include dist/index.js in your html first)
+
+```javascript
+var sunset = SunriseSunsetJS.getSunset(51.4541, -2.5920);
+var sunrise = SunriseSunsetJS.getSunrise(51.4541, -2.5920, new Date("2000-06-21"));
 ```
+
 By Matt Kane (@ascorbic). Copyright © 2012 Triggertrap Ltd. All Rights Reserved.
 
 This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
