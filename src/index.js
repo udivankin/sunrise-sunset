@@ -112,7 +112,7 @@ function mod(a, b) {
  * Calculate Date for either sunrise or sunset
  * 
  * @param {Number} latitude
- * @param {Number} latitude
+ * @param {Number} longitude
  * @param {boolean} isSunrise
  * @param {Number} zenith
  * @param {Date} date
