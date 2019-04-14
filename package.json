@@ -1,6 +1,6 @@
 {
   "name": "sunrise-sunset-js",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Sunrise and sunset time calculation for given coordinates",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -12,7 +12,7 @@
     "@babel/preset-env": "^7.4.3",
     "babel-jest": "^24.7.1",
     "jest-cli": "^24.7.1",
-    "rollup": "^1.9.0",
+    "rollup": "^1.10.0",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^9.3.4",
     "rollup-plugin-terser": "^4.0.4",
