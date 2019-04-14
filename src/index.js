@@ -159,7 +159,7 @@ function calculate(latitude, longitude, isSunrise, zenith, date) {
  * Calculate Sunrise time for given longitude, latidue, zenith and date
  * 
  * @param {Number} latitude
- * @param {Number} latitude
+ * @param {Number} longitude
  * @param {Date} [date]
  * @returns {Date}
  */
@@ -171,7 +171,7 @@ export function getSunrise(latitude, longitude, date = new Date()) {
  * Calculate Sunset time for given longitude, latidue, zenith and date
  * 
  * @param {Number} latitude
- * @param {Number} latitude
+ * @param {Number} longitude
  * @param {Date} [date]
  * @returns {Date}
  */
