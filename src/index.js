@@ -149,16 +149,17 @@ function calculate(latitude, longitude, isSunrise, zenith, date) {
   const localHour = localHourAngle / DEGREES_PER_HOUR;
   const localMeanTime = localHour + rightAscension - (0.06571 * approxTimeOfEventInDays) - 6.622;
   const time = mod(localMeanTime - (longitude / DEGREES_PER_HOUR), 24);
-  const midnight = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0);
+  const utcMidnight = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
 
-  return new Date(midnight.getTime() + (time * MSEC_IN_HOUR));
+  // Created date will be set to local (system) time zone.
+  return new Date(utcMidnight + (time * MSEC_IN_HOUR));
 }
 
 /**
- * Calculate Sunrise time for given longitude, latidue, zenith and date
+ * Calculate Sunrise time for given longitude, latitude, zenith and date
  * 
  * @param {Number} latitude
- * @param {Number} latitude
+ * @param {Number} longitude
  * @param {Date} [date]
  * @returns {Date}
  */
@@ -167,10 +168,10 @@ export function getSunrise(latitude, longitude, date = new Date()) {
 };
 
 /**
- * Calculate Sunset time for given longitude, latidue, zenith and date
+ * Calculate Sunset time for given longitude, latitude, zenith and date
  * 
  * @param {Number} latitude
- * @param {Number} latitude
+ * @param {Number} longitude
  * @param {Date} [date]
  * @returns {Date}
  */
