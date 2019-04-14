@@ -149,7 +149,7 @@ function calculate(latitude, longitude, isSunrise, zenith, date) {
   const localHour = localHourAngle / DEGREES_PER_HOUR;
   const localMeanTime = localHour + rightAscension - (0.06571 * approxTimeOfEventInDays) - 6.622;
   const time = mod(localMeanTime - (longitude / DEGREES_PER_HOUR), 24);
-  const utcMidnight = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  const utcMidnight = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
 
   // Created date will be set to local (system) time zone.
   return new Date(utcMidnight + (time * MSEC_IN_HOUR));
