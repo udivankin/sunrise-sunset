@@ -5,7 +5,7 @@ Based loosely and indirectly on Kevin Boone's SunTimes Java implementation of th
 Works on both browser (IE11+) and Node.js, ~1kb minified.
 
 [![Build Status](https://travis-ci.org/udivankin/sunrise-sunset.svg?branch=master)](https://travis-ci.org/udivankin/sunrise-sunset)
-[![Coverage Status](https://coveralls.io/github/udivankin/sunrise-sunset/badge.svg?branch=master)](https://coveralls.io/github/udivankin/sunrise-sunset?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/udivankin/sunrise-sunset/badge.svg?branch=master)](https://coveralls.io/github/udivankin/sunrise-sunset?branch=master)
 
 ### Install
 Via npm:
