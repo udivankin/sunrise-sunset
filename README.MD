@@ -31,7 +31,7 @@ const sunrise = getSunrise(51.1788, -1.8262, new Date("2000-06-21"));
 
 // Combine it with geolocation. Sunset tonight at your location.
 navigator.geolocation.getCurrentPosition(function(position) {
-		 console.log(getSunset(position.coords.latitude, position.coords.longitude));
+  console.log(getSunset(position.coords.latitude, position.coords.longitude));
 });
 ```
 
