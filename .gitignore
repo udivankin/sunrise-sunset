@@ -1,3 +1,6 @@
 /node_modules/
 /dist/index.js
+coverage/
+.DS_Store
+.idea/
 *.log

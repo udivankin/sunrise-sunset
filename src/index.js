@@ -103,9 +103,9 @@ function cosDeg(deg) {
 function mod(a, b) {
   const result = a % b;
 
-  return result < 0 ?
-    result + b :
-    result;
+  return result < 0
+    ? result + b
+    : result;
 }
 
 /**
@@ -121,9 +121,9 @@ function mod(a, b) {
 function calculate(latitude, longitude, isSunrise, zenith, date) {
   const dayOfYear = getDayOfYear(date);
   const hoursFromMeridian = longitude / DEGREES_PER_HOUR;
-  const approxTimeOfEventInDays = isSunrise ?
-    dayOfYear + ((6 - hoursFromMeridian) / 24) :
-    dayOfYear + ((18.0 - hoursFromMeridian) / 24);
+  const approxTimeOfEventInDays = isSunrise
+    ? dayOfYear + ((6 - hoursFromMeridian) / 24)
+    : dayOfYear + ((18.0 - hoursFromMeridian) / 24);
 
   const sunMeanAnomaly = (0.9856 * approxTimeOfEventInDays) - 3.289;
   const sunTrueLongitude = mod(sunMeanAnomaly + (1.916 * sinDeg(sunMeanAnomaly)) + (0.020 * sinDeg(2 * sunMeanAnomaly)) + 282.634, 360);
@@ -142,9 +142,9 @@ function calculate(latitude, longitude, isSunrise, zenith, date) {
   const cosDec = cosDeg(asinDeg(sinDec));
   const cosLocalHourAngle = ((cosDeg(zenith)) - (sinDec * (sinDeg(latitude)))) / (cosDec * (cosDeg(latitude)));
 
-  const localHourAngle = isSunrise ?
-    360 - acosDeg(cosLocalHourAngle) :
-    acosDeg(cosLocalHourAngle);
+  const localHourAngle = isSunrise
+    ? 360 - acosDeg(cosLocalHourAngle)
+    : acosDeg(cosLocalHourAngle);
 
   const localHour = localHourAngle / DEGREES_PER_HOUR;
   const localMeanTime = localHour + rightAscension - (0.06571 * approxTimeOfEventInDays) - 6.622;

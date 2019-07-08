@@ -4,6 +4,9 @@ Calculate sunrise and sunset times in Javascript.
 Based loosely and indirectly on Kevin Boone's SunTimes Java implementation of the US Naval Observatory's algorithm.
 Works on both browser (IE11+) and Node.js, ~1kb minified.
 
+[![Build Status](https://travis-ci.org/udivankin/sunrise-sunset.svg?branch=master)](https://travis-ci.org/udivankin/sunrise-sunset)
+[![Coverage Status](https://coveralls.io/github/udivankin/sunrise-sunset/badge.svg?branch=master)](https://coveralls.io/github/udivankin/sunrise-sunset?branch=master)
+
 ### Install
 Via npm:
 
