@@ -12,5 +12,5 @@ declare module 'sunrise-sunset-js' {
     date?: Date,
   ): Date;
 
-  export = { getSunrise, getSunset };
+  export { getSunrise, getSunset };
 }
