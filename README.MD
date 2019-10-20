@@ -36,6 +36,20 @@ const sunrise = getSunrise(51.1788, -1.8262, new Date("2000-06-21"));
 navigator.geolocation.getCurrentPosition(function(position) {
   console.log(getSunset(position.coords.latitude, position.coords.longitude));
 });
+
+// Get all solar events for given year sorted by time
+function getSolarEventsForYear(latitude, longitude, year) {
+  const result = [];
+  const start = new Date(year, 0, 1).getTime();
+  for (let i = 0; i < 366; i++) {
+    const d = new Date(start + (i * 24 * 60 * 60 * 1000));
+    if (d.getFullYear() > year) break; // For non-leap year
+    result.push(['sunrise', getSunrise(latitude, longitude, d)]);
+    result.push(['sunset', getSunset(latitude, longitude, d)]);
+  }
+  return result.filter(event => Boolean(event[1])).sort((a, b) => a - b);
+}
+getSolarEventsForYear(51.1788, -1.8262, 2019);
 ```
 
 For those who still don't use js bundlers, there's global SunriseSunsetJS object,
