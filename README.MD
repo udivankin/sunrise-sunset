@@ -26,18 +26,27 @@ import { getSunrise, getSunset } from 'sunrise-sunset-js';
 // Or if you use CommonJS imports:
 // const { getSunrise, getSunset } = require('sunrise-sunset-js')
 
-// Sunset tonight at the Triggertrap office for today
+/** 
+ * Sunset tonight at the Triggertrap office for today
+ */
 const sunset = getSunset(51.4541, -2.5920);
 
-// Sunrise at Stonehenge on midsummer's day 2000
+
+/** 
+ * Sunrise at Stonehenge on midsummer's day 2000
+ */
 const sunrise = getSunrise(51.1788, -1.8262, new Date("2000-06-21"));
 
-// Combine it with geolocation. Sunset tonight at your location.
+/** 
+ * Combined with geolocation. Sunset tonight at your location.
+ */
 navigator.geolocation.getCurrentPosition(function(position) {
   console.log(getSunset(position.coords.latitude, position.coords.longitude));
 });
 
-// Get all solar events for given year sorted by time
+/** 
+ * Get all solar events for given year (sorted by time of occurrence)
+ */
 function getSolarEventsForYear(latitude, longitude, year) {
   const result = [];
   const start = new Date(year, 0, 1).getTime();
