@@ -1,16 +1,4 @@
-
 declare module 'sunrise-sunset-js' {
-  function getSunrise(
-    latitude: Number,
-    longitude: Number,
-    date?: Date,
-  ): Date;
-
-  function getSunset(
-    latitude: Number,
-    longitude: Number,
-    date?: Date,
-  ): Date;
-
-  export { getSunrise, getSunset };
+  export function getSunrise(latitude: number, longitude: number, date?: Date): Date;
+  export function getSunset(latitude: number, longitude: number, date?: Date): Date;
 }
