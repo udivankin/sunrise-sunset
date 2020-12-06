@@ -3,7 +3,6 @@
   "version": "2.2.0",
   "description": "Sunrise and sunset time calculation for given coordinates",
   "main": "dist/index.js",
-  "module": "dist/index.mjs",
   "directories": {
     "test": "tests"
   },

@@ -1,4 +1,5 @@
 /dist/index.js
+/dist/index.d.ts
 /docs/build
 coverage
 node_modules
