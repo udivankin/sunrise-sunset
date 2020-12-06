@@ -3,7 +3,9 @@ src
 test
 lib/types.js
 node_modules
+tests
 scripts
+tsconfig.json
 .eslintignore
 .travis.yml
 codecov.yml

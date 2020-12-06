@@ -1,6 +1,6 @@
 {
   "name": "sunrise-sunset-js",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "Sunrise and sunset time calculation for given coordinates",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -8,19 +8,25 @@
     "test": "tests"
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.9.0",
-    "babel-jest": "^25.2.6",
-    "coveralls": "^3.0.11",
-    "jest-cli": "^25.2.6",
-    "rollup": "^2.3.2",
-    "rollup-plugin-babel": "^4.4.0",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-terser": "^5.3.0",
-    "rollup-watch": "^4.3.1"
+    "@babel/core": "7.12.9",
+    "@babel/preset-env": "7.12.7",
+    "@rollup/plugin-babel": "5.2.2",
+    "@rollup/plugin-commonjs": "17.0.0",
+    "@rollup/plugin-typescript": "8.0.0",
+    "babel-jest": "26.6.3",
+    "coveralls": "3.1.0",
+    "jest-cli": "26.6.3",
+    "pico-static-server": "3.0.3",
+    "rollup": "2.34.2",
+    "rollup-plugin-copy": "3.3.0",
+    "rollup-plugin-livereload": "2.0.0",
+    "rollup-plugin-terser": "7.0.2",
+    "rollup-watch": "4.3.1",
+    "tslib": "2.0.3",
+    "typescript": "4.1.2"
   },
   "scripts": {
-    "build": "rollup -c ./rollup.config.cjs.js && rollup -c ./rollup.config.legacy.js ",
+    "build": "rollup -c ./rollup.config.js",
     "test": "jest"
   },
   "repository": {

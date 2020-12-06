@@ -1,4 +1,4 @@
-import { getSunrise, getSunset } from '../src/index';
+const { getSunrise, getSunset } = require('../dist/index.js');
 
 describe('SunriseSunsetJS library', () => {
   it('should have getSunrise, getSunset exported methods', () => {
@@ -20,6 +20,5 @@ describe('SunriseSunsetJS library', () => {
       expect(getSunrise(46.0207, 7.7491, new Date('Sat Apr 13 2019 21:51:00 GMT+0200 (Central European Summer Time)'))
           ).toEqual(new Date('Sat Apr 13 2019 06:47:17.878 GMT+0200 (Central European Summer Time)'))
   });
-
 })
 

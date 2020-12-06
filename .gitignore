@@ -1,6 +1,7 @@
-/node_modules/
 /dist/index.js
-coverage/
+/docs/build
+coverage
+node_modules
 .DS_Store
 .idea/
 *.log
