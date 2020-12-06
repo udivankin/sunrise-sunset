@@ -1,6 +1,6 @@
 {
   "name": "sunrise-sunset-js",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Sunrise and sunset time calculation for given coordinates",
   "main": "dist/index.js",
   "directories": {
