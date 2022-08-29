@@ -34,10 +34,15 @@ const DEGREES_PER_HOUR = 360 / 24;
 const MSEC_IN_HOUR = 60 * 60 * 1000;
 
 /**
+ * Msec in day
+ */
+ const MSEC_IN_DAY = 8.64e7;
+
+/**
  * Get day of year
  */
 function getDayOfYear(date: Date): number {
-  return Math.ceil((date.getTime() - new Date(date.getFullYear(), 0, 1).getTime()) / 8.64e7);
+  return Math.ceil((date.getTime() - new Date(date.getFullYear(), 0, 1).getTime()) / MSEC_IN_DAY);
 }
 
 /**
