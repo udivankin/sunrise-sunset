@@ -1,3 +1,4 @@
+
 //#region src/constants.ts
 /**
 * Solar Position Algorithm Constants
@@ -3075,5 +3076,10 @@ function getSunTimes(latitude, longitude, date = /* @__PURE__ */ new Date(), opt
 }
 
 //#endregion
-export { getSolarNoon, getSolarPosition, getSunTimes, getSunrise, getSunset, getTwilight };
-//# sourceMappingURL=index.js.map
+exports.getSolarNoon = getSolarNoon;
+exports.getSolarPosition = getSolarPosition;
+exports.getSunTimes = getSunTimes;
+exports.getSunrise = getSunrise;
+exports.getSunset = getSunset;
+exports.getTwilight = getTwilight;
+//# sourceMappingURL=index.cjs.map

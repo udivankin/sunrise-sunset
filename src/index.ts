@@ -1,146 +1,330 @@
 /**
- * Sunrise/sunset script. By Matt Kane. Adopted for NPM use by Alexey Udivankin.
- * 
- * Based loosely and indirectly on Kevin Boone's SunTimes Java implementation 
- * of the US Naval Observatory's algorithm.
- * 
- * Copyright © 2012 Triggertrap Ltd. All rights reserved.
+ * Solar Position Algorithm Constants
+ * Based on NREL's Solar Position Algorithm for Solar Radiation Applications
  *
- * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation; either version 2.1 of the License, or (at your option)
- * any later version.
- *
- * This library is distributed in the hope that it will be useful,but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
- * details.
- * You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA,
- * or connect to: http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+ * @module sunrise-sunset
  */
 
-/**
- * Default zenith
- */
-const DEFAULT_ZENITH = 90.8333;
+import {
+  SpaOptions,
+  SolarPosition,
+  TwilightTimes,
+} from './types';
+import {
+  ZENITH_CIVIL_TWILIGHT,
+  ZENITH_NAUTICAL_TWILIGHT,
+  ZENITH_ASTRONOMICAL_TWILIGHT,
+} from './constants';
+import { fractionalHourToDate } from './utils/time';
+import {
+  initSpaFromDate,
+  spaCalculate,
+  isValidSunTime,
+} from './spa';
+import { calculateCustomZenithTimes } from './calculations/rts';
+
+// Re-export types for consumers
+export type { SpaOptions, SolarPosition, TwilightTimes } from './types';
 
 /**
- * Degrees per hour
+ * Get the sunrise time for a given location and date
+ * 
+ * @param latitude - Observer latitude in degrees (positive north)
+ * @param longitude - Observer longitude in degrees (positive east)
+ * @param date - Date for calculation (defaults to current date/time)
+ * @param options - Optional SPA calculation options
+ * @returns Date object representing sunrise time, or null if sun doesn't rise (polar night)
+ * 
+ * @example
+ * ```typescript
+ * const sunrise = getSunrise(51.5074, -0.1278); // London
+ * console.log(sunrise?.toLocaleTimeString());
+ * ```
  */
-const DEGREES_PER_HOUR = 360 / 24;
+export function getSunrise(
+  latitude: number,
+  longitude: number,
+  date: Date = new Date(),
+  options?: SpaOptions
+): Date | null {
+  const spa = initSpaFromDate(date, latitude, longitude, options);
+  const result = spaCalculate(spa);
 
-/**
- * Msec in hour
- */
-const MSEC_IN_HOUR = 60 * 60 * 1000;
+  if (result !== 0 || !isValidSunTime(spa.sunrise)) {
+    return null;
+  }
 
-/**
- * Msec in day
- */
- const MSEC_IN_DAY = 8.64e7;
-
-/**
- * Get day of year
- */
-function getDayOfYear(date: Date): number {
-  return Math.ceil((date.getTime() - new Date(date.getFullYear(), 0, 1).getTime()) / MSEC_IN_DAY);
+  return fractionalHourToDate(date, spa.sunrise, spa.timezone);
 }
 
 /**
- * Get sin of value in deg
+ * Get the sunset time for a given location and date
+ * 
+ * @param latitude - Observer latitude in degrees (positive north)
+ * @param longitude - Observer longitude in degrees (positive east)
+ * @param date - Date for calculation (defaults to current date/time)
+ * @param options - Optional SPA calculation options
+ * @returns Date object representing sunset time, or null if sun doesn't set (polar day)
+ * 
+ * @example
+ * ```typescript
+ * const sunset = getSunset(51.5074, -0.1278); // London
+ * console.log(sunset?.toLocaleTimeString());
+ * ```
  */
-function sinDeg(deg: number): number {
-  return Math.sin(deg * 2.0 * Math.PI / 360.0);
+export function getSunset(
+  latitude: number,
+  longitude: number,
+  date: Date = new Date(),
+  options?: SpaOptions
+): Date | null {
+  const spa = initSpaFromDate(date, latitude, longitude, options);
+  const result = spaCalculate(spa);
+
+  if (result !== 0 || !isValidSunTime(spa.sunset)) {
+    return null;
+  }
+
+  return fractionalHourToDate(date, spa.sunset, spa.timezone);
 }
 
 /**
- * Get acos of value in deg
+ * Get the solar noon (sun transit) time for a given location and date
+ * 
+ * @param latitude - Observer latitude in degrees (positive north)
+ * @param longitude - Observer longitude in degrees (positive east)
+ * @param date - Date for calculation (defaults to current date/time)
+ * @param options - Optional SPA calculation options
+ * @returns Date object representing solar noon time, or null on calculation error
+ * 
+ * @example
+ * ```typescript
+ * const noon = getSolarNoon(51.5074, -0.1278); // London
+ * console.log(noon?.toLocaleTimeString());
+ * ```
  */
-function acosDeg(x: number): number {
-  return Math.acos(x) * 360.0 / (2 * Math.PI);
+export function getSolarNoon(
+  latitude: number,
+  longitude: number,
+  date: Date = new Date(),
+  options?: SpaOptions
+): Date | null {
+  const spa = initSpaFromDate(date, latitude, longitude, options);
+  const result = spaCalculate(spa);
+
+  if (result !== 0 || !isValidSunTime(spa.suntransit)) {
+    return null;
+  }
+
+  return fractionalHourToDate(date, spa.suntransit, spa.timezone);
 }
 
 /**
- * Get asin of value in deg
+ * Get the current solar position (zenith, azimuth, elevation, etc.)
+ * 
+ * @param latitude - Observer latitude in degrees (positive north)
+ * @param longitude - Observer longitude in degrees (positive east)
+ * @param date - Date for calculation (defaults to current date/time)
+ * @param options - Optional SPA calculation options
+ * @returns Solar position object with zenith, azimuth, elevation, etc.
+ * 
+ * @example
+ * ```typescript
+ * const position = getSolarPosition(51.5074, -0.1278);
+ * console.log(`Sun is at ${position.elevation}° elevation, ${position.azimuth}° azimuth`);
+ * ```
  */
-function asinDeg(x: number): number {
-  return Math.asin(x) * 360.0 / (2 * Math.PI);
+export function getSolarPosition(
+  latitude: number,
+  longitude: number,
+  date: Date = new Date(),
+  options?: SpaOptions
+): SolarPosition | null {
+  const spa = initSpaFromDate(date, latitude, longitude, options);
+  const result = spaCalculate(spa);
+
+  if (result !== 0) {
+    return null;
+  }
+
+  return {
+    zenith: spa.zenith,
+    azimuth: spa.azimuth,
+    azimuthAstro: spa.azimuthAstro,
+    elevation: spa.e,
+    rightAscension: spa.alpha,
+    declination: spa.delta,
+    hourAngle: spa.h,
+  };
 }
 
 /**
- * Get tan of value in deg
+ * Get civil, nautical, and astronomical twilight times
+ * 
+ * Civil twilight: Sun is 6° below the horizon
+ * Nautical twilight: Sun is 12° below the horizon
+ * Astronomical twilight: Sun is 18° below the horizon
+ * 
+ * @param latitude - Observer latitude in degrees (positive north)
+ * @param longitude - Observer longitude in degrees (positive east)
+ * @param date - Date for calculation (defaults to current date/time)
+ * @param options - Optional SPA calculation options
+ * @returns Twilight times object, with null values for polar conditions
+ * 
+ * @example
+ * ```typescript
+ * const twilight = getTwilight(51.5074, -0.1278);
+ * console.log(`Civil dawn: ${twilight.civilDawn?.toLocaleTimeString()}`);
+ * console.log(`Civil dusk: ${twilight.civilDusk?.toLocaleTimeString()}`);
+ * ```
  */
-function tanDeg(deg: number): number {
-  return Math.tan(deg * 2.0 * Math.PI / 360.0);
+export function getTwilight(
+  latitude: number,
+  longitude: number,
+  date: Date = new Date(),
+  options?: SpaOptions
+): TwilightTimes | null {
+  const spa = initSpaFromDate(date, latitude, longitude, options);
+  const result = spaCalculate(spa);
+
+  if (result !== 0 || !isValidSunTime(spa.suntransit)) {
+    return null;
+  }
+
+  // Calculate twilight times using custom zenith angles
+  const civil = calculateCustomZenithTimes(
+    latitude,
+    spa.delta,
+    spa.suntransit,
+    ZENITH_CIVIL_TWILIGHT
+  );
+
+  const nautical = calculateCustomZenithTimes(
+    latitude,
+    spa.delta,
+    spa.suntransit,
+    ZENITH_NAUTICAL_TWILIGHT
+  );
+
+  const astronomical = calculateCustomZenithTimes(
+    latitude,
+    spa.delta,
+    spa.suntransit,
+    ZENITH_ASTRONOMICAL_TWILIGHT
+  );
+
+  // Convert fractional hours to Date objects
+  const toDate = (hours: number | null): Date | null => {
+    if (hours === null || !isFinite(hours) || hours < 0 || hours > 24) {
+      return null;
+    }
+    return fractionalHourToDate(date, hours, spa.timezone);
+  };
+
+  return {
+    civilDawn: toDate(civil.sunrise),
+    civilDusk: toDate(civil.sunset),
+    nauticalDawn: toDate(nautical.sunrise),
+    nauticalDusk: toDate(nautical.sunset),
+    astronomicalDawn: toDate(astronomical.sunrise),
+    astronomicalDusk: toDate(astronomical.sunset),
+  };
 }
 
 /**
- * Get cos of value in deg
+ * Get all sun times for a given location and date in a single call
+ * More efficient than calling individual functions separately
+ * 
+ * @param latitude - Observer latitude in degrees (positive north)
+ * @param longitude - Observer longitude in degrees (positive east)
+ * @param date - Date for calculation (defaults to current date/time)
+ * @param options - Optional SPA calculation options
+ * @returns Object containing sunrise, sunset, solar noon, and twilight times
+ * 
+ * @example
+ * ```typescript
+ * const times = getSunTimes(51.5074, -0.1278);
+ * console.log(`Sunrise: ${times.sunrise?.toLocaleTimeString()}`);
+ * console.log(`Sunset: ${times.sunset?.toLocaleTimeString()}`);
+ * console.log(`Solar noon: ${times.solarNoon?.toLocaleTimeString()}`);
+ * ```
  */
-function cosDeg(deg: number): number {
-  return Math.cos(deg * 2.0 * Math.PI / 360.0);
+export function getSunTimes(
+  latitude: number,
+  longitude: number,
+  date: Date = new Date(),
+  options?: SpaOptions
+): {
+  sunrise: Date | null;
+  sunset: Date | null;
+  solarNoon: Date | null;
+  twilight: TwilightTimes | null;
+} {
+  const spa = initSpaFromDate(date, latitude, longitude, options);
+  const result = spaCalculate(spa);
+
+  if (result !== 0) {
+    return {
+      sunrise: null,
+      sunset: null,
+      solarNoon: null,
+      twilight: null,
+    };
+  }
+
+  const toDate = (hours: number): Date | null => {
+    if (!isValidSunTime(hours)) {
+      return null;
+    }
+    return fractionalHourToDate(date, hours, spa.timezone);
+  };
+
+  // Calculate twilight times
+  let twilight: TwilightTimes | null = null;
+  if (isValidSunTime(spa.suntransit)) {
+    const civil = calculateCustomZenithTimes(
+      latitude,
+      spa.delta,
+      spa.suntransit,
+      ZENITH_CIVIL_TWILIGHT
+    );
+
+    const nautical = calculateCustomZenithTimes(
+      latitude,
+      spa.delta,
+      spa.suntransit,
+      ZENITH_NAUTICAL_TWILIGHT
+    );
+
+    const astronomical = calculateCustomZenithTimes(
+      latitude,
+      spa.delta,
+      spa.suntransit,
+      ZENITH_ASTRONOMICAL_TWILIGHT
+    );
+
+    const twilightToDate = (hours: number | null): Date | null => {
+      if (hours === null || !isFinite(hours) || hours < 0 || hours > 24) {
+        return null;
+      }
+      return fractionalHourToDate(date, hours, spa.timezone);
+    };
+
+    twilight = {
+      civilDawn: twilightToDate(civil.sunrise),
+      civilDusk: twilightToDate(civil.sunset),
+      nauticalDawn: twilightToDate(nautical.sunrise),
+      nauticalDusk: twilightToDate(nautical.sunset),
+      astronomicalDawn: twilightToDate(astronomical.sunrise),
+      astronomicalDusk: twilightToDate(astronomical.sunset),
+    };
+  }
+
+  return {
+    sunrise: toDate(spa.sunrise),
+    sunset: toDate(spa.sunset),
+    solarNoon: toDate(spa.suntransit),
+    twilight,
+  };
 }
 
-/**
- * Get ramainder
- */
-function mod(a: number, b: number): number {
-  const result = a % b;
-
-  return result < 0
-    ? result + b
-    : result;
-}
-
-/**
- * Calculate Date for either sunrise or sunset
- */
-function calculate(latitude: number, longitude: number, isSunrise: boolean, zenith: number, date: Date): Date {
-  const dayOfYear = getDayOfYear(date);
-  const hoursFromMeridian = longitude / DEGREES_PER_HOUR;
-  const approxTimeOfEventInDays = isSunrise
-    ? dayOfYear + ((6 - hoursFromMeridian) / 24)
-    : dayOfYear + ((18.0 - hoursFromMeridian) / 24);
-
-  const sunMeanAnomaly = (0.9856 * approxTimeOfEventInDays) - 3.289;
-  const sunTrueLongitude = mod(sunMeanAnomaly + (1.916 * sinDeg(sunMeanAnomaly)) + (0.020 * sinDeg(2 * sunMeanAnomaly)) + 282.634, 360);
-  const ascension = 0.91764 * tanDeg(sunTrueLongitude);
-
-  let rightAscension;
-  rightAscension = 360 / (2 * Math.PI) * Math.atan(ascension);
-  rightAscension = mod(rightAscension, 360);
-
-  const lQuadrant = Math.floor(sunTrueLongitude / 90) * 90;
-  const raQuadrant = Math.floor(rightAscension / 90) * 90;
-  rightAscension = rightAscension + (lQuadrant - raQuadrant);
-  rightAscension /= DEGREES_PER_HOUR;
-
-  const sinDec = 0.39782 * sinDeg(sunTrueLongitude);
-  const cosDec = cosDeg(asinDeg(sinDec));
-  const cosLocalHourAngle = ((cosDeg(zenith)) - (sinDec * (sinDeg(latitude)))) / (cosDec * (cosDeg(latitude)));
-
-  const localHourAngle = isSunrise
-    ? 360 - acosDeg(cosLocalHourAngle)
-    : acosDeg(cosLocalHourAngle);
-
-  const localHour = localHourAngle / DEGREES_PER_HOUR;
-  const localMeanTime = localHour + rightAscension - (0.06571 * approxTimeOfEventInDays) - 6.622;
-  const time = mod(localMeanTime - (longitude / DEGREES_PER_HOUR), 24);
-  const utcMidnight = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-
-  // Created date will be set to local (system) time zone.
-  return new Date(utcMidnight + (time * MSEC_IN_HOUR));
-}
-
-/**
- * Calculate Sunrise time for given longitude, latitude, zenith and date
- */
-export function getSunrise(latitude: number, longitude: number, date = new Date()): Date {
-  return calculate(latitude, longitude, true, DEFAULT_ZENITH, date);
-};
-
-/**
- * Calculate Sunset time for given longitude, latitude, zenith and date
- */
-export function getSunset(latitude: number, longitude: number, date = new Date()): Date {
-  return calculate(latitude, longitude, false, DEFAULT_ZENITH, date);
-};
