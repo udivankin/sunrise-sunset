@@ -6,6 +6,12 @@ High-precision sunrise and sunset calculation library using NREL's Solar Positio
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 
+## [Interactive Demo](https://udivankin.github.io/sunrise-sunset/)
+
+Visualize the annual sun cycle for any location on Earth with our interactive D3.js chart.
+
+![Demo Screenshot](https://raw.githubusercontent.com/udivankin/sunrise-sunset/main/demo/screenshot.png)
+
 ## Overview
 
 This library provides accurate solar position calculations with uncertainties of ±0.0003 degrees for dates from year -2000 to 6000. It's based on the **National Renewable Energy Laboratory's Solar Position Algorithm (SPA)**, which offers significantly improved accuracy over simplified algorithms.
@@ -473,6 +479,18 @@ The algorithm accounts for:
 - Observer elevation
 - Temperature and pressure effects
 - Gravitational aberration
+
+### Development
+
+To run the interactive demo locally:
+
+```bash
+cd demo
+npm install
+npm run dev
+```
+
+The demo will be available at `http://localhost:5173`.
 
 ## License
 

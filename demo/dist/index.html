@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sun Times Visualization | Sunrise Sunset JS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0c0e14;
+            --card-bg: rgba(23, 27, 38, 0.7);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a8c0;
+            --accent: #4f46e5;
+            --accent-hover: #6366f1;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            background: radial-gradient(circle at 50% 50%, #1a1f35 0%, #0c0e14 100%);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        .visualization-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls-overlay {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            width: 260px;
+        }
+
+        .controls-overlay h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .location-info {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: -0.5rem;
+            min-height: 1.2em;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            color: white;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .button-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1rem;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+        }
+
+        #geoBtn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+        }
+
+        .legend-overlay {
+            position: absolute;
+            bottom: 2rem;
+            left: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            z-index: 90;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(12, 14, 20, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            font-size: 0.85rem;
+        }
+    </style>
+  <script type="module" crossorigin src="./assets/index-CHM5DDEb.js"></script>
+</head>
+
+<body>
+    <div class="visualization-container">
+        <div class="controls-overlay">
+            <h2>Sun Cycle</h2>
+            <div id="locationDisplay" class="location-info"></div>
+            <div class="input-group">
+                <label for="lat">Latitude</label>
+                <input type="number" id="lat" value="51.5074" step="0.0001">
+            </div>
+            <div class="input-group">
+                <label for="lng">Longitude</label>
+                <input type="number" id="lng" value="-0.1278" step="0.0001">
+            </div>
+            <div class="button-row">
+                <button id="updateBtn">Update</button>
+                <button id="geoBtn" title="Use My Location">📍</button>
+            </div>
+        </div>
+
+        <div id="chart"></div>
+        <div id="tooltip" class="tooltip"></div>
+
+        <div class="legend-overlay">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #fbbf24;"></div>
+                <span>Daylight</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #6366f1;"></div>
+                <span>Civil Twilight</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #3730a3;"></div>
+                <span>Nautical</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #1e1b4b;"></div>
+                <span>Astronomical</span>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
