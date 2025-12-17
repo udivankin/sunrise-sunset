@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { getSunTimes } from 'sunrise-sunset-js';
+import { getSunTimes, getSolarPosition } from 'sunrise-sunset-js';
 
 interface DayData {
     date: Date;
@@ -11,6 +11,10 @@ interface DayData {
     nauticalDusk: number | null;
     astronomicalDawn: number | null;
     astronomicalDusk: number | null;
+    isDaylight: boolean | { sunrise: number, sunset: number };
+    isCivil: boolean | { dawn: number, dusk: number };
+    isNautical: boolean | { dawn: number, dusk: number };
+    isAstronomical: boolean | { dawn: number, dusk: number };
 }
 
 function dateToFractionalHour(date: Date | null, timezoneId?: string): number | null {
@@ -72,17 +76,32 @@ function generateYearlyData(lat: number, lng: number, timezoneId: string): DayDa
         const date = new Date(year, 0, day + 1);
         const offset = getOffsetHours(timezoneId, date);
         const times = getSunTimes(lat, lng, date, { timezone: offset, timezoneId });
+        const noon = times.solarNoon || date;
+        const noonPos = getSolarPosition(lat, lng, noon, { timezone: offset, timezoneId });
+
+        const sunrise = dateToFractionalHour(times.sunrise, timezoneId);
+        const sunset = dateToFractionalHour(times.sunset, timezoneId);
+        const civilDawn = dateToFractionalHour(times.twilight?.civilDawn ?? null, timezoneId);
+        const civilDusk = dateToFractionalHour(times.twilight?.civilDusk ?? null, timezoneId);
+        const nauticalDawn = dateToFractionalHour(times.twilight?.nauticalDawn ?? null, timezoneId);
+        const nauticalDusk = dateToFractionalHour(times.twilight?.nauticalDusk ?? null, timezoneId);
+        const astronomicalDawn = dateToFractionalHour(times.twilight?.astronomicalDawn ?? null, timezoneId);
+        const astronomicalDusk = dateToFractionalHour(times.twilight?.astronomicalDusk ?? null, timezoneId);
 
         data.push({
             date,
-            sunrise: dateToFractionalHour(times.sunrise, timezoneId),
-            sunset: dateToFractionalHour(times.sunset, timezoneId),
-            civilDawn: dateToFractionalHour(times.twilight?.civilDawn ?? null, timezoneId),
-            civilDusk: dateToFractionalHour(times.twilight?.civilDusk ?? null, timezoneId),
-            nauticalDawn: dateToFractionalHour(times.twilight?.nauticalDawn ?? null, timezoneId),
-            nauticalDusk: dateToFractionalHour(times.twilight?.nauticalDusk ?? null, timezoneId),
-            astronomicalDawn: dateToFractionalHour(times.twilight?.astronomicalDawn ?? null, timezoneId),
-            astronomicalDusk: dateToFractionalHour(times.twilight?.astronomicalDusk ?? null, timezoneId),
+            sunrise,
+            sunset,
+            civilDawn,
+            civilDusk,
+            nauticalDawn,
+            nauticalDusk,
+            astronomicalDawn,
+            astronomicalDusk,
+            isDaylight: (sunrise !== null && sunset !== null) ? { sunrise, sunset } : (noonPos?.elevation ?? -90) > -0.833,
+            isCivil: (civilDawn !== null && civilDusk !== null) ? { dawn: civilDawn, dusk: civilDusk } : (noonPos?.elevation ?? -90) > -6,
+            isNautical: (nauticalDawn !== null && nauticalDusk !== null) ? { dawn: nauticalDawn, dusk: nauticalDusk } : (noonPos?.elevation ?? -90) > -12,
+            isAstronomical: (astronomicalDawn !== null && astronomicalDusk !== null) ? { dawn: astronomicalDawn, dusk: astronomicalDusk } : (noonPos?.elevation ?? -90) > -18,
         });
     }
     return data;
@@ -140,8 +159,14 @@ async function renderChart(lat: number, lng: number) {
         .attr('fill', colors.astronomical)
         .attr('d', d3.area<DayData>()
             .x(d => x(d.date))
-            .y0(d => y(d.astronomicalDawn ?? 0))
-            .y1(d => y(d.astronomicalDusk ?? 24))
+            .y0(d => {
+                if (typeof d.isAstronomical === 'boolean') return d.isAstronomical ? y(0) : y(12);
+                return y(d.isAstronomical.dawn);
+            })
+            .y1(d => {
+                if (typeof d.isAstronomical === 'boolean') return d.isAstronomical ? y(24) : y(12);
+                return y(d.isAstronomical.dusk);
+            })
             .curve(d3.curveBasis));
 
     // Nautical Twilight
@@ -150,8 +175,14 @@ async function renderChart(lat: number, lng: number) {
         .attr('fill', colors.nautical)
         .attr('d', d3.area<DayData>()
             .x(d => x(d.date))
-            .y0(d => y(d.nauticalDawn ?? 0))
-            .y1(d => y(d.nauticalDusk ?? 24))
+            .y0(d => {
+                if (typeof d.isNautical === 'boolean') return d.isNautical ? y(0) : y(12);
+                return y(d.isNautical.dawn);
+            })
+            .y1(d => {
+                if (typeof d.isNautical === 'boolean') return d.isNautical ? y(24) : y(12);
+                return y(d.isNautical.dusk);
+            })
             .curve(d3.curveBasis));
 
     // Civil Twilight
@@ -160,8 +191,14 @@ async function renderChart(lat: number, lng: number) {
         .attr('fill', colors.civil)
         .attr('d', d3.area<DayData>()
             .x(d => x(d.date))
-            .y0(d => y(d.civilDawn ?? 0))
-            .y1(d => y(d.civilDusk ?? 24))
+            .y0(d => {
+                if (typeof d.isCivil === 'boolean') return d.isCivil ? y(0) : y(12);
+                return y(d.isCivil.dawn);
+            })
+            .y1(d => {
+                if (typeof d.isCivil === 'boolean') return d.isCivil ? y(24) : y(12);
+                return y(d.isCivil.dusk);
+            })
             .curve(d3.curveBasis));
 
     // Daylight
@@ -170,8 +207,14 @@ async function renderChart(lat: number, lng: number) {
         .attr('fill', colors.day)
         .attr('d', d3.area<DayData>()
             .x(d => x(d.date))
-            .y0(d => y(d.sunrise ?? 12))
-            .y1(d => y(d.sunset ?? 12))
+            .y0(d => {
+                if (typeof d.isDaylight === 'boolean') return d.isDaylight ? y(0) : y(12);
+                return y(d.isDaylight.sunrise);
+            })
+            .y1(d => {
+                if (typeof d.isDaylight === 'boolean') return d.isDaylight ? y(24) : y(12);
+                return y(d.isDaylight.sunset);
+            })
             .curve(d3.curveBasis));
 
     // Subtle axes
