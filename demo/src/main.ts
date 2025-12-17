@@ -13,36 +13,93 @@ interface DayData {
     astronomicalDusk: number | null;
 }
 
-function dateToFractionalHour(date: Date | null): number | null {
+function dateToFractionalHour(date: Date | null, timezoneId?: string): number | null {
     if (!date) return null;
+    if (timezoneId) {
+        try {
+            const parts = new Intl.DateTimeFormat('en-US', {
+                timeZone: timezoneId,
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+                hour12: false
+            }).formatToParts(date);
+
+            const hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0');
+            const minute = parseInt(parts.find(p => p.type === 'minute')?.value || '0');
+            const second = parseInt(parts.find(p => p.type === 'second')?.value || '0');
+            return hour + minute / 60 + second / 3600;
+        } catch (e) {
+            console.warn(`Failed to format date for timezone ${timezoneId}, falling back to local`, e);
+        }
+    }
     return date.getHours() + date.getMinutes() / 60 + date.getSeconds() / 3600;
 }
 
-function generateYearlyData(lat: number, lng: number): DayData[] {
+function getOffsetHours(timeZone: string, date: Date): number {
+    try {
+        const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+        const tzDate = new Date(date.toLocaleString('en-US', { timeZone }));
+        return (tzDate.getTime() - utcDate.getTime()) / 3600000;
+    } catch (e) {
+        return -date.getTimezoneOffset() / 60;
+    }
+}
+
+const timezoneCache = new Map<string, string>();
+
+async function getTimezoneId(lat: number, lng: number): Promise<string> {
+    const key = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+    if (timezoneCache.has(key)) return timezoneCache.get(key)!;
+
+    try {
+        const response = await fetch(`https://timeapi.io/api/time/current/coordinate?latitude=${lat}&longitude=${lng}`);
+        if (!response.ok) throw new Error('Timezone API failed');
+        const data = await response.json();
+        timezoneCache.set(key, data.timeZone);
+        return data.timeZone;
+    } catch (e) {
+        console.warn('Failed to fetch timezone, falling back to local', e);
+        return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+}
+
+function generateYearlyData(lat: number, lng: number, timezoneId: string): DayData[] {
     const data: DayData[] = [];
     const year = new Date().getFullYear();
 
     for (let day = 0; day < 365; day++) {
         const date = new Date(year, 0, day + 1);
-        const times = getSunTimes(lat, lng, date);
+        const offset = getOffsetHours(timezoneId, date);
+        const times = getSunTimes(lat, lng, date, { timezone: offset, timezoneId });
 
         data.push({
             date,
-            sunrise: dateToFractionalHour(times.sunrise),
-            sunset: dateToFractionalHour(times.sunset),
-            civilDawn: dateToFractionalHour(times.twilight?.civilDawn ?? null),
-            civilDusk: dateToFractionalHour(times.twilight?.civilDusk ?? null),
-            nauticalDawn: dateToFractionalHour(times.twilight?.nauticalDawn ?? null),
-            nauticalDusk: dateToFractionalHour(times.twilight?.nauticalDusk ?? null),
-            astronomicalDawn: dateToFractionalHour(times.twilight?.astronomicalDawn ?? null),
-            astronomicalDusk: dateToFractionalHour(times.twilight?.astronomicalDusk ?? null),
+            sunrise: dateToFractionalHour(times.sunrise, timezoneId),
+            sunset: dateToFractionalHour(times.sunset, timezoneId),
+            civilDawn: dateToFractionalHour(times.twilight?.civilDawn ?? null, timezoneId),
+            civilDusk: dateToFractionalHour(times.twilight?.civilDusk ?? null, timezoneId),
+            nauticalDawn: dateToFractionalHour(times.twilight?.nauticalDawn ?? null, timezoneId),
+            nauticalDusk: dateToFractionalHour(times.twilight?.nauticalDusk ?? null, timezoneId),
+            astronomicalDawn: dateToFractionalHour(times.twilight?.astronomicalDawn ?? null, timezoneId),
+            astronomicalDusk: dateToFractionalHour(times.twilight?.astronomicalDusk ?? null, timezoneId),
         });
     }
     return data;
 }
 
-function renderChart(lat: number, lng: number) {
-    const data = generateYearlyData(lat, lng);
+async function renderChart(lat: number, lng: number) {
+    const timezoneId = await getTimezoneId(lat, lng);
+
+    const tzDisplay = document.getElementById('timezoneDisplay');
+    if (tzDisplay) {
+        const now = new Date();
+        const offset = getOffsetHours(timezoneId, now);
+        const sign = offset >= 0 ? '+' : '';
+        tzDisplay.textContent = `${timezoneId} (UTC${sign}${offset})`;
+    }
+
+    const data = generateYearlyData(lat, lng, timezoneId);
     const container = d3.select('#chart');
     container.selectAll('*').remove();
 
@@ -186,7 +243,7 @@ function renderChart(lat: number, lng: number) {
                 .style('left', `${finalX}px`)
                 .style('top', `${d3.pointer(event, container.node())[1]}px`)
                 .html(`
-                    <div style="font-weight: 600; margin-bottom: 0.5rem;">${d.date.toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}</div>
+                    <div style="font-weight: 600; margin-bottom: 0.5rem;">${d.date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', timeZone: timezoneId })}</div>
                     <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem; font-size: 0.85rem;">
                         <span style="color: ${colors.day}">Sunrise:</span> <span>${formatHour(d.sunrise)}</span>
                         <span style="color: ${colors.day}">Sunset:</span> <span>${formatHour(d.sunset)}</span>

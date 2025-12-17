@@ -79,6 +79,7 @@ export function createSpaData(): SpaData {
     slope: 0,
     azimuthRotation: 0,
     atmosphericRefraction: REFRACTION_CORRECTION,
+    timezoneId: '',
     function: SpaFunction.SPA_ALL,
 
     // Intermediate values
@@ -354,7 +355,14 @@ export function initSpaFromDate(
   spa.hour = date.getHours();
   spa.minute = date.getMinutes();
   spa.second = date.getSeconds() + date.getMilliseconds() / 1000;
-  spa.timezone = -date.getTimezoneOffset() / 60;
+
+  if (options.timezone !== undefined) {
+    spa.timezone = options.timezone;
+  } else {
+    spa.timezone = -date.getTimezoneOffset() / 60;
+  }
+
+  spa.timezoneId = options.timezoneId ?? '';
 
   spa.latitude = latitude;
   spa.longitude = longitude;

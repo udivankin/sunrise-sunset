@@ -57,6 +57,10 @@ export interface SpaOptions {
   azimuthRotation?: number;
   /** Atmospheric refraction at sunrise/sunset in degrees (default: 0.5667) */
   atmosphericRefraction?: number;
+  /** Timezone offset in hours from UTC (e.g., -5 for EST) */
+  timezone?: number;
+  /** IANA Timezone ID (e.g., 'America/New_York') */
+  timezoneId?: string;
 }
 
 /**
@@ -119,6 +123,7 @@ export interface SpaData {
   slope: number;
   azimuthRotation: number;
   atmosphericRefraction: number;
+  timezoneId: string;
   function: SpaFunction;
 
   // Intermediate values
