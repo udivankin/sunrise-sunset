@@ -1,6 +1,6 @@
 {
   "name": "sunrise-sunset-js",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "High-precision sunrise and sunset time calculation using NREL's Solar Position Algorithm",
   "type": "module",
   "main": "./dist/index.cjs",

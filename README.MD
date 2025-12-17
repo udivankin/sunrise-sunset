@@ -10,7 +10,7 @@ High-precision sunrise and sunset calculation library using NREL's Solar Positio
 
 Visualize the annual sun cycle for any location on Earth with our interactive D3.js chart.
 
-![Demo Screenshot](https://raw.githubusercontent.com/udivankin/sunrise-sunset/main/demo/screenshot.png)
+![Demo Screenshot](https://raw.githubusercontent.com/udivankin/sunrise-sunset/master/demo/screenshot.png)
 
 ## Overview
 
