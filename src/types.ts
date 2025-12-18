@@ -79,6 +79,16 @@ export interface TwilightTimes {
   astronomicalDawn: Date | null;
   /** Astronomical twilight ends (sun 18° below horizon) */
   astronomicalDusk: Date | null;
+  /** Golden hour begins/ends (sun 6° above horizon to 4° below horizon) */
+  goldenHour: {
+    morning: { start: Date | null, end: Date | null };
+    evening: { start: Date | null, end: Date | null };
+  } | null;
+  /** Blue hour begins/ends (sun 4° below horizon to 6° below horizon) */
+  blueHour: {
+    morning: { start: Date | null, end: Date | null };
+    evening: { start: Date | null, end: Date | null };
+  } | null;
 }
 
 /**

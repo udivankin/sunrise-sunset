@@ -14,6 +14,8 @@ import {
   ZENITH_CIVIL_TWILIGHT,
   ZENITH_NAUTICAL_TWILIGHT,
   ZENITH_ASTRONOMICAL_TWILIGHT,
+  ZENITH_GOLDEN_HOUR,
+  ZENITH_BLUE_HOUR,
 } from './constants';
 import { fractionalHourToDate } from './utils/time';
 import {
@@ -213,6 +215,20 @@ export function getTwilight(
     ZENITH_ASTRONOMICAL_TWILIGHT
   );
 
+  const golden = calculateCustomZenithTimes(
+    latitude,
+    spa.delta,
+    spa.suntransit,
+    ZENITH_GOLDEN_HOUR
+  );
+
+  const blue = calculateCustomZenithTimes(
+    latitude,
+    spa.delta,
+    spa.suntransit,
+    ZENITH_BLUE_HOUR
+  );
+
   // Convert fractional hours to Date objects
   const toDate = (hours: number | null): Date | null => {
     if (hours === null || !isFinite(hours) || hours < 0 || hours > 24) {
@@ -228,6 +244,14 @@ export function getTwilight(
     nauticalDusk: toDate(nautical.sunset),
     astronomicalDawn: toDate(astronomical.sunrise),
     astronomicalDusk: toDate(astronomical.sunset),
+    goldenHour: {
+      morning: { start: toDate(spa.sunrise), end: toDate(golden.sunrise) },
+      evening: { start: toDate(golden.sunset), end: toDate(spa.sunset) },
+    },
+    blueHour: {
+      morning: { start: toDate(blue.sunrise), end: toDate(spa.sunrise) },
+      evening: { start: toDate(spa.sunset), end: toDate(blue.sunset) },
+    },
   };
 }
 
@@ -303,6 +327,20 @@ export function getSunTimes(
       ZENITH_ASTRONOMICAL_TWILIGHT
     );
 
+    const golden = calculateCustomZenithTimes(
+      latitude,
+      spa.delta,
+      spa.suntransit,
+      ZENITH_GOLDEN_HOUR
+    );
+
+    const blue = calculateCustomZenithTimes(
+      latitude,
+      spa.delta,
+      spa.suntransit,
+      ZENITH_BLUE_HOUR
+    );
+
     const twilightToDate = (hours: number | null): Date | null => {
       if (hours === null || !isFinite(hours) || hours < 0 || hours > 24) {
         return null;
@@ -317,6 +355,14 @@ export function getSunTimes(
       nauticalDusk: twilightToDate(nautical.sunset),
       astronomicalDawn: twilightToDate(astronomical.sunrise),
       astronomicalDusk: twilightToDate(astronomical.sunset),
+      goldenHour: {
+        morning: { start: twilightToDate(spa.sunrise), end: twilightToDate(golden.sunrise) },
+        evening: { start: twilightToDate(golden.sunset), end: twilightToDate(spa.sunset) },
+      },
+      blueHour: {
+        morning: { start: twilightToDate(blue.sunrise), end: twilightToDate(spa.sunrise) },
+        evening: { start: twilightToDate(spa.sunset), end: twilightToDate(blue.sunset) },
+      },
     };
   }
 

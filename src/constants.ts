@@ -43,6 +43,8 @@ export const ZENITH_SUNRISE_SUNSET = 90.8333; // includes refraction + sun radiu
 export const ZENITH_CIVIL_TWILIGHT = 96.0;    // 6° below horizon
 export const ZENITH_NAUTICAL_TWILIGHT = 102.0; // 12° below horizon
 export const ZENITH_ASTRONOMICAL_TWILIGHT = 108.0; // 18° below horizon
+export const ZENITH_GOLDEN_HOUR = 84.0;         // 6° above horizon (approximate start of golden hour)
+export const ZENITH_BLUE_HOUR = 94.0;           // 4° below horizon (approximate start of blue hour)
 
 // Invalid value marker for high-latitude cases
 export const INVALID_VALUE = -99999;

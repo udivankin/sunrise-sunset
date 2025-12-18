@@ -1,6 +1,6 @@
 {
   "name": "sunrise-sunset-js",
-  "version": "3.1.4",
+  "version": "3.2.0",
   "description": "High-precision sunrise and sunset time calculation using NREL's Solar Position Algorithm",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -53,7 +53,9 @@
     "dusk",
     "astronomy",
     "coordinates",
-    "geolocation"
+    "geolocation",
+    "golden-hour",
+    "blue-hour"
   ],
   "author": {
     "name": "Aleksei Udivankin",

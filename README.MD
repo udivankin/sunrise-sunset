@@ -8,7 +8,7 @@ High-precision sunrise and sunset calculation library using NREL's Solar Positio
 
 ## [Interactive Demo](https://udivankin.github.io/sunrise-sunset/)
 
-Visualize the annual sun cycle for any location on Earth with our interactive D3.js chart.
+Visualize the annual sun cycle for any location on Earth with our interactive D3.js chart. Features include automatic timezone detection, reverse geocoding, and persistent caching for improved performance.
 
 ![Demo Screenshot](https://raw.githubusercontent.com/udivankin/sunrise-sunset/master/demo/screenshot.png)
 
@@ -30,12 +30,13 @@ Solar Radiation Research Laboratory
 ## Features
 
 - ✅ **High-precision calculations** (±30 seconds accuracy)
+- ✅ **Advanced twilight detection** (Civil, Nautical, Astronomical, Golden, and Blue hours)
 - ✅ **Proper high-latitude handling** (returns `null` during polar day/night)
 - ✅ **Full TypeScript support** with comprehensive type definitions
 - ✅ **ESM and CommonJS** dual package exports
 - ✅ **Zero dependencies** for runtime
-- ✅ **Extended solar calculations** (solar noon, twilight times, solar position)
-- ✅ **Timezone-aware** date handling
+- ✅ **Extended solar calculations** (solar noon, solar position, etc.)
+- ✅ **Comprehensive timezone support** (implicit and explicit)
 - ✅ **Tree-shakeable** modular architecture
 
 ## Installation
@@ -149,9 +150,11 @@ Calculate the sun's position in the sky at a given time.
 interface SolarPosition {
   zenith: number;           // Zenith angle (0° = directly overhead)
   azimuth: number;          // Azimuth angle (0° = North, 90° = East)
+  azimuthAstro: number;     // Azimuth westward from South (astronomical)
   elevation: number;        // Elevation angle above horizon
-  rightAscension: number;   // Right ascension (hours)
+  rightAscension: number;   // Right ascension (degrees)
   declination: number;      // Declination (degrees)
+  hourAngle: number;        // Local hour angle (degrees)
 }
 ```
 
@@ -181,6 +184,14 @@ interface TwilightTimes {
   nauticalDusk: Date | null;        // Sun at -12°
   astronomicalDawn: Date | null;    // Sun at -18°
   astronomicalDusk: Date | null;    // Sun at -18°
+  goldenHour: {                     // Sun between 6° above and horizon
+    morning: { start: Date | null, end: Date | null };
+    evening: { start: Date | null, end: Date | null };
+  } | null;
+  blueHour: {                       // Sun between horizon and 4° below
+    morning: { start: Date | null, end: Date | null };
+    evening: { start: Date | null, end: Date | null };
+  } | null;
 }
 ```
 
@@ -229,10 +240,13 @@ All functions accept an optional `SpaOptions` parameter:
 
 ```typescript
 interface SpaOptions {
-  temperature?: number;    // Temperature in °C (default: 14.6)
+  temperature?: number;    // Temperature in °C (default: 15)
   pressure?: number;       // Atmospheric pressure in mbar (default: 1013)
-  deltaT?: number;        // Difference between earth rotation time and terrestrial time
-  elevation?: number;     // Observer elevation in meters (default: 0)
+  deltaT?: number;         // Earth rotation correction in seconds (default: 67)
+  elevation?: number;      // Observer elevation in meters (default: 0)
+  timezone?: number;       // Explicit timezone offset in hours (e.g. -5)
+  timezoneId?: string;     // IANA Timezone ID (e.g. 'America/New_York')
+  atmosphericRefraction?: number; // Refraction at horizon in degrees (default: 0.5667)
 }
 ```
 
@@ -514,4 +528,4 @@ Contributions welcome! Please open an issue or submit a pull request.
 
 ---
 
-**Version 3.0.0** - Completely rewritten with NREL's Solar Position Algorithm
+**Version 3.1.4** - Enhanced with full SPA implementation and extended twilight data.

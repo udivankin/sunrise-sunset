@@ -15,6 +15,14 @@ interface DayData {
     isCivil: boolean | { dawn: number, dusk: number };
     isNautical: boolean | { dawn: number, dusk: number };
     isAstronomical: boolean | { dawn: number, dusk: number };
+    goldenHour?: {
+        morning: { start: number | null, end: number | null },
+        evening: { start: number | null, end: number | null }
+    };
+    blueHour?: {
+        morning: { start: number | null, end: number | null },
+        evening: { start: number | null, end: number | null }
+    };
 }
 
 function dateToFractionalHour(date: Date | null, timezoneId?: string): number | null {
@@ -147,6 +155,26 @@ function generateYearlyData(lat: number, lng: number, timezoneId: string): DayDa
             isCivil: (civilDawn !== null && civilDusk !== null) ? { dawn: civilDawn, dusk: civilDusk } : (noonPos?.elevation ?? -90) > -6,
             isNautical: (nauticalDawn !== null && nauticalDusk !== null) ? { dawn: nauticalDawn, dusk: nauticalDusk } : (noonPos?.elevation ?? -90) > -12,
             isAstronomical: (astronomicalDawn !== null && astronomicalDusk !== null) ? { dawn: astronomicalDawn, dusk: astronomicalDusk } : (noonPos?.elevation ?? -90) > -18,
+            goldenHour: {
+                morning: {
+                    start: dateToFractionalHour(times.twilight?.goldenHour?.morning.start ?? null, timezoneId),
+                    end: dateToFractionalHour(times.twilight?.goldenHour?.morning.end ?? null, timezoneId),
+                },
+                evening: {
+                    start: dateToFractionalHour(times.twilight?.goldenHour?.evening.start ?? null, timezoneId),
+                    end: dateToFractionalHour(times.twilight?.goldenHour?.evening.end ?? null, timezoneId),
+                },
+            },
+            blueHour: {
+                morning: {
+                    start: dateToFractionalHour(times.twilight?.blueHour?.morning.start ?? null, timezoneId),
+                    end: dateToFractionalHour(times.twilight?.blueHour?.morning.end ?? null, timezoneId),
+                },
+                evening: {
+                    start: dateToFractionalHour(times.twilight?.blueHour?.evening.start ?? null, timezoneId),
+                    end: dateToFractionalHour(times.twilight?.blueHour?.evening.end ?? null, timezoneId),
+                },
+            },
         });
     }
     return data;
@@ -204,7 +232,8 @@ function drawChart() {
         civil: '#6366f1',
         nautical: '#3730a3',
         astronomical: '#1e1b4b',
-        night: '#0c0e14'
+        night: '#0c0e14',
+        golden: 'rgba(251, 191, 36, 0.4)' // Semi-transparent yellow
     };
 
     // Night layer (background)
@@ -259,6 +288,26 @@ function drawChart() {
                 if (typeof d.isCivil === 'boolean') return d.isCivil ? y(24) : y(12);
                 return y(d.isCivil.dusk);
             })
+            .curve(d3.curveBasis));
+
+    // Golden Hour (Morning)
+    svg.append('path')
+        .datum(currentData)
+        .attr('fill', colors.golden)
+        .attr('d', d3.area<DayData>()
+            .x(d => x(d.date))
+            .y0(d => (d.goldenHour?.morning.start !== null) ? y(d.goldenHour!.morning.start!) : y(12))
+            .y1(d => (d.goldenHour?.morning.end !== null) ? y(d.goldenHour!.morning.end!) : y(12))
+            .curve(d3.curveBasis));
+
+    // Golden Hour (Evening)
+    svg.append('path')
+        .datum(currentData)
+        .attr('fill', colors.golden)
+        .attr('d', d3.area<DayData>()
+            .x(d => x(d.date))
+            .y0(d => (d.goldenHour?.evening.start !== null) ? y(d.goldenHour!.evening.start!) : y(12))
+            .y1(d => (d.goldenHour?.evening.end !== null) ? y(d.goldenHour!.evening.end!) : y(12))
             .curve(d3.curveBasis));
 
     // Daylight
@@ -352,6 +401,9 @@ function drawChart() {
                         <span style="color: ${colors.day}">Sunset:</span> <span>${formatHour(d.sunset)}</span>
                         <span style="color: ${colors.civil}">Civil Dawn:</span> <span>${formatHour(d.civilDawn)}</span>
                         <span style="color: ${colors.civil}">Civil Dusk:</span> <span>${formatHour(d.civilDusk)}</span>
+                        <div style="grid-column: 1 / -1; margin-top: 0.25rem; font-size: 0.75rem; color: rgba(255,255,255,0.6);">Golden Hour:</div>
+                        <span style="color: #fbbf24">Morning:</span> <span>${formatHour(d.goldenHour?.morning.start ?? null)} - ${formatHour(d.goldenHour?.morning.end ?? null)}</span>
+                        <span style="color: #fbbf24">Evening:</span> <span>${formatHour(d.goldenHour?.evening.start ?? null)} - ${formatHour(d.goldenHour?.evening.end ?? null)}</span>
                     </div>
                 `);
         });
