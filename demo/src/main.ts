@@ -52,15 +52,60 @@ function getOffsetHours(timeZone: string, date: Date): number {
 
 const timezoneCache = new Map<string, string>();
 
+class BoundedCache {
+    private maxEntries = 50;
+    private storageKey = 'sun-times-api-cache';
+
+    private getCache(): Record<string, { timezone?: string, location?: string }> {
+        try {
+            return JSON.parse(localStorage.getItem(this.storageKey) || '{}');
+        } catch {
+            return {};
+        }
+    }
+
+    private saveCache(cache: Record<string, any>) {
+        const keys = Object.keys(cache);
+        if (keys.length > this.maxEntries) {
+            const keysToDelete = keys.slice(0, keys.length - this.maxEntries);
+            keysToDelete.forEach(k => delete cache[k]);
+        }
+        localStorage.setItem(this.storageKey, JSON.stringify(cache));
+    }
+
+    get(key: string) {
+        return this.getCache()[key];
+    }
+
+    set(key: string, data: { timezone?: string, location?: string }) {
+        const cache = this.getCache();
+        cache[key] = { ...(cache[key] || {}), ...data };
+        this.saveCache(cache);
+    }
+}
+
+const apiCache = new BoundedCache();
+
 async function getTimezoneId(lat: number, lng: number): Promise<string> {
     const key = `${lat.toFixed(2)},${lng.toFixed(2)}`;
     if (timezoneCache.has(key)) return timezoneCache.get(key)!;
 
+    const cached = apiCache.get(key);
+    if (cached?.timezone) {
+        timezoneCache.set(key, cached.timezone);
+        return cached.timezone;
+    }
+
     try {
+        const tzDisplay = document.getElementById('timezoneDisplay');
+        if (tzDisplay) {
+            tzDisplay.innerHTML = '<span class="spinner"></span>Detecting timezone...';
+        }
         const response = await fetch(`https://timeapi.io/api/time/current/coordinate?latitude=${lat}&longitude=${lng}`);
         if (!response.ok) throw new Error('Timezone API failed');
         const data = await response.json();
         timezoneCache.set(key, data.timeZone);
+        apiCache.set(key, { timezone: data.timeZone });
         return data.timeZone;
     } catch (e) {
         console.warn('Failed to fetch timezone, falling back to local', e);
@@ -107,8 +152,13 @@ function generateYearlyData(lat: number, lng: number, timezoneId: string): DayDa
     return data;
 }
 
-async function renderChart(lat: number, lng: number) {
+let currentData: DayData[] = [];
+let currentTimezoneId: string = '';
+
+async function updateView(lat: number, lng: number) {
+    // Fetch info and data
     const timezoneId = await getTimezoneId(lat, lng);
+    currentTimezoneId = timezoneId;
 
     const tzDisplay = document.getElementById('timezoneDisplay');
     if (tzDisplay) {
@@ -118,7 +168,17 @@ async function renderChart(lat: number, lng: number) {
         tzDisplay.textContent = `${timezoneId} (UTC${sign}${offset})`;
     }
 
-    const data = generateYearlyData(lat, lng, timezoneId);
+    currentData = generateYearlyData(lat, lng, timezoneId);
+
+    // Fetch location name (async, doesn't block chart)
+    fetchLocationName(lat, lng);
+
+    drawChart();
+}
+
+function drawChart() {
+    if (!currentData.length) return;
+
     const container = d3.select('#chart');
     container.selectAll('*').remove();
 
@@ -131,7 +191,7 @@ async function renderChart(lat: number, lng: number) {
         .append('g');
 
     const x = d3.scaleTime()
-        .domain(d3.extent(data, d => d.date) as [Date, Date])
+        .domain(d3.extent(currentData, d => d.date) as [Date, Date])
         .range([0, width]);
 
     const y = d3.scaleLinear()
@@ -155,7 +215,7 @@ async function renderChart(lat: number, lng: number) {
 
     // Astronomical Twilight
     svg.append('path')
-        .datum(data)
+        .datum(currentData)
         .attr('fill', colors.astronomical)
         .attr('d', d3.area<DayData>()
             .x(d => x(d.date))
@@ -171,7 +231,7 @@ async function renderChart(lat: number, lng: number) {
 
     // Nautical Twilight
     svg.append('path')
-        .datum(data)
+        .datum(currentData)
         .attr('fill', colors.nautical)
         .attr('d', d3.area<DayData>()
             .x(d => x(d.date))
@@ -187,7 +247,7 @@ async function renderChart(lat: number, lng: number) {
 
     // Civil Twilight
     svg.append('path')
-        .datum(data)
+        .datum(currentData)
         .attr('fill', colors.civil)
         .attr('d', d3.area<DayData>()
             .x(d => x(d.date))
@@ -203,7 +263,7 @@ async function renderChart(lat: number, lng: number) {
 
     // Daylight
     svg.append('path')
-        .datum(data)
+        .datum(currentData)
         .attr('fill', colors.day)
         .attr('d', d3.area<DayData>()
             .x(d => x(d.date))
@@ -272,8 +332,8 @@ async function renderChart(lat: number, lng: number) {
             const bisect = d3.bisector((d: DayData) => d.date).left;
             const pointerX = d3.pointer(event)[0];
             const x0 = x.invert(pointerX);
-            const i = bisect(data, x0, 1);
-            const d = data[Math.min(i - 1, data.length - 1)];
+            const i = bisect(currentData, x0, 1);
+            const d = currentData[Math.min(i - 1, currentData.length - 1)];
 
             focus.attr('transform', `translate(${x(d.date)},0)`);
 
@@ -286,7 +346,7 @@ async function renderChart(lat: number, lng: number) {
                 .style('left', `${finalX}px`)
                 .style('top', `${d3.pointer(event, container.node())[1]}px`)
                 .html(`
-                    <div style="font-weight: 600; margin-bottom: 0.5rem;">${d.date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', timeZone: timezoneId })}</div>
+                    <div style="font-weight: 600; margin-bottom: 0.5rem;">${d.date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', timeZone: currentTimezoneId })}</div>
                     <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem; font-size: 0.85rem;">
                         <span style="color: ${colors.day}">Sunrise:</span> <span>${formatHour(d.sunrise)}</span>
                         <span style="color: ${colors.day}">Sunset:</span> <span>${formatHour(d.sunset)}</span>
@@ -301,7 +361,15 @@ async function fetchLocationName(lat: number, lng: number) {
     const display = document.getElementById('locationDisplay');
     if (!display) return;
 
+    const key = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+    const cached = apiCache.get(key);
+    if (cached?.location) {
+        display.textContent = cached.location;
+        return;
+    }
+
     try {
+        display.innerHTML = '<span class="spinner"></span>Locating...';
         const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`, {
             headers: {
                 'Accept-Language': 'en'
@@ -320,7 +388,9 @@ async function fetchLocationName(lat: number, lng: number) {
         const country = address.country_code?.toUpperCase() || '';
 
         const parts = [city, state, country].filter(Boolean);
-        display.textContent = parts.join(', ');
+        const locationName = parts.join(', ');
+        display.textContent = locationName;
+        apiCache.set(key, { location: locationName });
     } catch (error) {
         console.error('Geocoding error:', error);
         display.textContent = '';
@@ -352,16 +422,14 @@ function formatHour(h: number | null): string {
 const initial = loadCoordinates();
 (document.getElementById('lat') as HTMLInputElement).value = initial.lat.toFixed(4);
 (document.getElementById('lng') as HTMLInputElement).value = initial.lng.toFixed(4);
-renderChart(initial.lat, initial.lng);
-fetchLocationName(initial.lat, initial.lng);
+updateView(initial.lat, initial.lng);
 
 // Event Listeners
 document.getElementById('updateBtn')?.addEventListener('click', () => {
     const lat = parseFloat((document.getElementById('lat') as HTMLInputElement).value);
     const lng = parseFloat((document.getElementById('lng') as HTMLInputElement).value);
     if (!isNaN(lat) && !isNaN(lng)) {
-        renderChart(lat, lng);
-        fetchLocationName(lat, lng);
+        updateView(lat, lng);
         saveCoordinates(lat, lng);
     }
 });
@@ -373,16 +441,24 @@ document.getElementById('geoBtn')?.addEventListener('click', () => {
             const lng = position.coords.longitude;
             (document.getElementById('lat') as HTMLInputElement).value = lat.toFixed(4);
             (document.getElementById('lng') as HTMLInputElement).value = lng.toFixed(4);
-            renderChart(lat, lng);
-            fetchLocationName(lat, lng);
+            updateView(lat, lng);
             saveCoordinates(lat, lng);
         });
     }
 });
 
-// Resize handler
-window.addEventListener('resize', () => {
-    const lat = parseFloat((document.getElementById('lat') as HTMLInputElement).value);
-    const lng = parseFloat((document.getElementById('lng') as HTMLInputElement).value);
-    renderChart(lat, lng);
+// Collapsible controls
+document.getElementById('controlsToggle')?.addEventListener('click', () => {
+    document.getElementById('controlsOverlay')?.classList.toggle('collapsed');
+});
+
+// Resize and Orientation handler
+function handleResize() {
+    drawChart();
+}
+
+window.addEventListener('resize', handleResize);
+window.addEventListener('orientationchange', () => {
+    // Small delay to ensure dimensions are updated
+    setTimeout(handleResize, 100);
 });

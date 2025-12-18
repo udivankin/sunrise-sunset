@@ -58,6 +58,44 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             z-index: 100;
             width: 260px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .controls-overlay.collapsed {
+            transform: translateX(calc(-100% + 1rem));
+        }
+
+        .controls-toggle {
+            position: absolute;
+            top: 50%;
+            right: -1.25rem;
+            transform: translateY(-50%);
+            width: 2.5rem;
+            height: 2.5rem;
+            background: var(--accent);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 101;
+            transition: all 0.2s;
+        }
+
+        .controls-toggle:hover {
+            background: var(--accent-hover);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .controls-toggle .icon {
+            transition: transform 0.3s;
+        }
+
+        .controls-overlay.collapsed .controls-toggle .icon {
+            transform: rotate(180deg);
         }
 
         .controls-overlay h2 {
@@ -181,12 +219,49 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
             font-size: 0.85rem;
         }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .controls-overlay {
+                top: 1rem;
+                left: 1rem;
+                width: calc(100vw - 4rem);
+                max-width: 300px;
+                padding: 1rem;
+            }
+
+            .legend-overlay {
+                bottom: 1rem;
+                left: 1rem;
+                padding: 0.75rem;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div class="visualization-container">
-        <div class="controls-overlay">
+        <div class="controls-overlay" id="controlsOverlay">
+            <button class="controls-toggle" id="controlsToggle" aria-label="Toggle Controls">
+                <span class="icon">❮</span>
+            </button>
             <h2>Sun Cycle</h2>
             <div id="locationDisplay" class="location-info"></div>
             <div id="timezoneDisplay" class="location-info"></div>
