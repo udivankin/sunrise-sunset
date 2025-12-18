@@ -29,6 +29,8 @@ export declare const ZENITH_SUNRISE_SUNSET = 90.8333;
 export declare const ZENITH_CIVIL_TWILIGHT = 96;
 export declare const ZENITH_NAUTICAL_TWILIGHT = 102;
 export declare const ZENITH_ASTRONOMICAL_TWILIGHT = 108;
+export declare const ZENITH_GOLDEN_HOUR = 84;
+export declare const ZENITH_BLUE_HOUR = 94;
 export declare const INVALID_VALUE = -99999;
 /**
  * Earth Heliocentric Longitude Periodic Terms (L)

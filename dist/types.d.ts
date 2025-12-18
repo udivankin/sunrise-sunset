@@ -53,6 +53,10 @@ export interface SpaOptions {
     azimuthRotation?: number;
     /** Atmospheric refraction at sunrise/sunset in degrees (default: 0.5667) */
     atmosphericRefraction?: number;
+    /** Timezone offset in hours from UTC (e.g., -5 for EST) */
+    timezone?: number;
+    /** IANA Timezone ID (e.g., 'America/New_York') */
+    timezoneId?: string;
 }
 /**
  * Twilight calculation results
@@ -70,6 +74,28 @@ export interface TwilightTimes {
     astronomicalDawn: Date | null;
     /** Astronomical twilight ends (sun 18° below horizon) */
     astronomicalDusk: Date | null;
+    /** Golden hour begins/ends (sun 6° above horizon to 4° below horizon) */
+    goldenHour: {
+        morning: {
+            start: Date | null;
+            end: Date | null;
+        };
+        evening: {
+            start: Date | null;
+            end: Date | null;
+        };
+    } | null;
+    /** Blue hour begins/ends (sun 4° below horizon to 6° below horizon) */
+    blueHour: {
+        morning: {
+            start: Date | null;
+            end: Date | null;
+        };
+        evening: {
+            start: Date | null;
+            end: Date | null;
+        };
+    } | null;
 }
 /**
  * Solar position output
@@ -111,6 +137,7 @@ export interface SpaData {
     slope: number;
     azimuthRotation: number;
     atmosphericRefraction: number;
+    timezoneId: string;
     function: SpaFunction;
     jd: number;
     jc: number;

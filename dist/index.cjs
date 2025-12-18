@@ -38,6 +38,8 @@ const TERM_EPS_D = 3;
 const ZENITH_CIVIL_TWILIGHT = 96;
 const ZENITH_NAUTICAL_TWILIGHT = 102;
 const ZENITH_ASTRONOMICAL_TWILIGHT = 108;
+const ZENITH_GOLDEN_HOUR = 84;
+const ZENITH_BLUE_HOUR = 94;
 const INVALID_VALUE = -99999;
 /**
 * Earth Heliocentric Longitude Periodic Terms (L)
@@ -2679,6 +2681,7 @@ function createSpaData() {
 		slope: 0,
 		azimuthRotation: 0,
 		atmosphericRefraction: REFRACTION_CORRECTION,
+		timezoneId: "",
 		function: SpaFunction.SPA_ALL,
 		jd: 0,
 		jc: 0,
@@ -2869,7 +2872,9 @@ function initSpaFromDate(date, latitude, longitude, options = {}) {
 	spa.hour = date.getHours();
 	spa.minute = date.getMinutes();
 	spa.second = date.getSeconds() + date.getMilliseconds() / 1e3;
-	spa.timezone = -date.getTimezoneOffset() / 60;
+	if (options.timezone !== void 0) spa.timezone = options.timezone;
+	else spa.timezone = -date.getTimezoneOffset() / 60;
+	spa.timezoneId = options.timezoneId ?? "";
 	spa.latitude = latitude;
 	spa.longitude = longitude;
 	spa.elevation = options.elevation ?? 0;
@@ -3006,6 +3011,8 @@ function getTwilight(latitude, longitude, date = /* @__PURE__ */ new Date(), opt
 	const civil = calculateCustomZenithTimes(latitude, spa.delta, spa.suntransit, ZENITH_CIVIL_TWILIGHT);
 	const nautical = calculateCustomZenithTimes(latitude, spa.delta, spa.suntransit, ZENITH_NAUTICAL_TWILIGHT);
 	const astronomical = calculateCustomZenithTimes(latitude, spa.delta, spa.suntransit, ZENITH_ASTRONOMICAL_TWILIGHT);
+	const golden = calculateCustomZenithTimes(latitude, spa.delta, spa.suntransit, ZENITH_GOLDEN_HOUR);
+	const blue = calculateCustomZenithTimes(latitude, spa.delta, spa.suntransit, ZENITH_BLUE_HOUR);
 	const toDate = (hours) => {
 		if (hours === null || !isFinite(hours) || hours < 0 || hours > 24) return null;
 		return fractionalHourToDate(date, hours, spa.timezone);
@@ -3016,7 +3023,27 @@ function getTwilight(latitude, longitude, date = /* @__PURE__ */ new Date(), opt
 		nauticalDawn: toDate(nautical.sunrise),
 		nauticalDusk: toDate(nautical.sunset),
 		astronomicalDawn: toDate(astronomical.sunrise),
-		astronomicalDusk: toDate(astronomical.sunset)
+		astronomicalDusk: toDate(astronomical.sunset),
+		goldenHour: {
+			morning: {
+				start: toDate(spa.sunrise),
+				end: toDate(golden.sunrise)
+			},
+			evening: {
+				start: toDate(golden.sunset),
+				end: toDate(spa.sunset)
+			}
+		},
+		blueHour: {
+			morning: {
+				start: toDate(blue.sunrise),
+				end: toDate(spa.sunrise)
+			},
+			evening: {
+				start: toDate(spa.sunset),
+				end: toDate(blue.sunset)
+			}
+		}
 	};
 }
 /**
@@ -3054,6 +3081,8 @@ function getSunTimes(latitude, longitude, date = /* @__PURE__ */ new Date(), opt
 		const civil = calculateCustomZenithTimes(latitude, spa.delta, spa.suntransit, ZENITH_CIVIL_TWILIGHT);
 		const nautical = calculateCustomZenithTimes(latitude, spa.delta, spa.suntransit, ZENITH_NAUTICAL_TWILIGHT);
 		const astronomical = calculateCustomZenithTimes(latitude, spa.delta, spa.suntransit, ZENITH_ASTRONOMICAL_TWILIGHT);
+		const golden = calculateCustomZenithTimes(latitude, spa.delta, spa.suntransit, ZENITH_GOLDEN_HOUR);
+		const blue = calculateCustomZenithTimes(latitude, spa.delta, spa.suntransit, ZENITH_BLUE_HOUR);
 		const twilightToDate = (hours) => {
 			if (hours === null || !isFinite(hours) || hours < 0 || hours > 24) return null;
 			return fractionalHourToDate(date, hours, spa.timezone);
@@ -3064,7 +3093,27 @@ function getSunTimes(latitude, longitude, date = /* @__PURE__ */ new Date(), opt
 			nauticalDawn: twilightToDate(nautical.sunrise),
 			nauticalDusk: twilightToDate(nautical.sunset),
 			astronomicalDawn: twilightToDate(astronomical.sunrise),
-			astronomicalDusk: twilightToDate(astronomical.sunset)
+			astronomicalDusk: twilightToDate(astronomical.sunset),
+			goldenHour: {
+				morning: {
+					start: twilightToDate(spa.sunrise),
+					end: twilightToDate(golden.sunrise)
+				},
+				evening: {
+					start: twilightToDate(golden.sunset),
+					end: twilightToDate(spa.sunset)
+				}
+			},
+			blueHour: {
+				morning: {
+					start: twilightToDate(blue.sunrise),
+					end: twilightToDate(spa.sunrise)
+				},
+				evening: {
+					start: twilightToDate(spa.sunset),
+					end: twilightToDate(blue.sunset)
+				}
+			}
 		};
 	}
 	return {
