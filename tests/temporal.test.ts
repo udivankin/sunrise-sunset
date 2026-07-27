@@ -4,7 +4,7 @@ import {
   getSunTimes,
   TemporalDateInput,
 } from '../src/temporal';
-import { getSunrise as getDateSunrise } from '../src/index';
+import { getSunrise as getDateSunrise, getSunTimes as getDateSunTimes } from '../src/index';
 
 class MockInstant {
   constructor(readonly epochMilliseconds: number) {}
@@ -118,6 +118,20 @@ describe('Temporal API', () => {
     expect(times.solarNoon).toBeInstanceOf(MockInstant);
     expect(times.twilight!.civilDawn).toBeInstanceOf(MockInstant);
     expect(times.twilight!.goldenHour!.morning.start).toBeInstanceOf(MockInstant);
+  });
+
+  it('returns solar noon and twilight during polar night', () => {
+    const date = new Date('2026-12-21T12:00:00Z');
+    const times = getSunTimes(69.6496, 18.9560, date, { timezone: 0 });
+
+    expect(times.sunrise).toBeNull();
+    expect(times.sunset).toBeNull();
+    expect(times.solarNoon).toBeInstanceOf(MockInstant);
+    expect(times.solarNoon!.epochMilliseconds).toBe(
+      getDateSunTimes(69.6496, 18.9560, date, { timezone: 0 }).solarNoon!.getTime()
+    );
+    expect(times.twilight!.civilDawn).toBeInstanceOf(MockInstant);
+    expect(times.twilight!.civilDusk).toBeInstanceOf(MockInstant);
   });
 
   it('throws when native Temporal is unavailable', () => {

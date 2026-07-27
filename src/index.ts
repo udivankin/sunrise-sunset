@@ -16,6 +16,7 @@ import {
   ZENITH_ASTRONOMICAL_TWILIGHT,
   ZENITH_GOLDEN_HOUR,
   ZENITH_BLUE_HOUR,
+  INVALID_VALUE,
 } from './constants';
 import { fractionalHourToDate } from './utils/time';
 import {
@@ -249,7 +250,8 @@ export function getTwilight(
 
   // Convert fractional hours to Date objects
   const toDate = (hours: number | null): Date | null => {
-    if (hours === null || !isFinite(hours)) {
+    // INVALID_VALUE is finite, so isFinite alone would let the sentinel through
+    if (hours === null || hours === INVALID_VALUE || !isFinite(hours)) {
       return null;
     }
     return fractionalHourToDate(
@@ -372,7 +374,8 @@ export function getSunTimes(
     );
 
     const twilightToDate = (hours: number | null): Date | null => {
-      if (hours === null || !isFinite(hours)) {
+      // INVALID_VALUE is finite, so isFinite alone would let the sentinel through
+      if (hours === null || hours === INVALID_VALUE || !isFinite(hours)) {
         return null;
       }
       return fractionalHourToDate(
