@@ -238,21 +238,15 @@ export function calculateEotAndSunRiseTransitSet(
   // Calculate hour angle at rise/set
   const h0 = sunHourAngleAtRiseSet(spa.latitude, delta[JDSign.JD_ZERO], h0Prime);
 
-  // Handle polar day/night
-  if (h0 === INVALID_VALUE) {
-    return {
-      sunrise: INVALID_VALUE,
-      suntransit: INVALID_VALUE,
-      sunset: INVALID_VALUE,
-      srha: INVALID_VALUE,
-      ssha: INVALID_VALUE,
-      sta: INVALID_VALUE,
-      eot,
-    };
-  }
+  const polar = h0 === INVALID_VALUE;
 
-  // Calculate approximate rise/set times
-  approxSunRiseAndSet(mRts, h0);
+  if (polar) {
+    // No rise/set to derive it from, so normalise the transit here
+    mRts[SunState.SUN_TRANSIT] = limitZero2one(mRts[SunState.SUN_TRANSIT]);
+  } else {
+    // Calculate approximate rise/set times
+    approxSunRiseAndSet(mRts, h0);
+  }
 
   // Refine calculations using interpolation
   const nuRts: number[] = [];
@@ -261,7 +255,10 @@ export function calculateEotAndSunRiseTransitSet(
   const deltaPrime: number[] = [];
   const hRts: number[] = [];
 
-  for (let i = 0; i < SunState.SUN_COUNT; i++) {
+  // Only the transit slot is meaningful during polar day/night
+  const rtsCount = polar ? SunState.SUN_TRANSIT + 1 : SunState.SUN_COUNT;
+
+  for (let i = 0; i < rtsCount; i++) {
     nuRts[i] = nu + 360.985647 * mRts[i];
     const n = mRts[i] + spa.deltaT / 86400.0;
     alphaPrime[i] = rtsAlphaDeltaPrime(alpha, n);
@@ -271,14 +268,28 @@ export function calculateEotAndSunRiseTransitSet(
   }
 
   // Calculate final times
-  const srha = hPrime[SunState.SUN_RISE];
-  const ssha = hPrime[SunState.SUN_SET];
   const sta = hRts[SunState.SUN_TRANSIT];
 
   const suntransit = dayfracToLocalHr(
     mRts[SunState.SUN_TRANSIT] - hPrime[SunState.SUN_TRANSIT] / 360.0,
     spa.timezone
   );
+
+  if (polar) {
+    // The sun crosses the meridian every day, even when it never crosses the horizon
+    return {
+      sunrise: INVALID_VALUE,
+      suntransit,
+      sunset: INVALID_VALUE,
+      srha: INVALID_VALUE,
+      ssha: INVALID_VALUE,
+      sta,
+      eot,
+    };
+  }
+
+  const srha = hPrime[SunState.SUN_RISE];
+  const ssha = hPrime[SunState.SUN_SET];
 
   const sunrise = dayfracToLocalHr(
     sunRiseAndSet(mRts, hRts, deltaPrime, spa.latitude, hPrime, h0Prime, SunState.SUN_RISE),
